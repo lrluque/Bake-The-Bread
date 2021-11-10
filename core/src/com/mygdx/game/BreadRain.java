@@ -21,7 +21,7 @@ import java.util.Iterator;
 public class BreadRain extends ApplicationAdapter {
 	private Texture dropImage;
 	private Texture bucketImage;
-	private Sound dropSound;
+	private Sound bucketSound;
 	private Music rainMusic;
 	private OrthographicCamera camera;
 	private SpriteBatch batch;
@@ -37,11 +37,11 @@ public class BreadRain extends ApplicationAdapter {
 
 		font = new BitmapFont();
 		// load the images for the droplet and the bucket, 64x64 pixels each
-		dropImage = new Texture(Gdx.files.internal("drop.png"));
+		dropImage = new Texture(Gdx.files.internal("bread.png"));
 		bucketImage = new Texture(Gdx.files.internal("bucket.png"));
 
 		// load the drop sound effect and the rain background "music"
-		dropSound = Gdx.audio.newSound(Gdx.files.internal("dropSound.wav"));
+		bucketSound = Gdx.audio.newSound(Gdx.files.internal("bucketSound.mp3"));
 		rainMusic = Gdx.audio.newMusic(Gdx.files.internal("rainMusic.mp3"));
 
 		// start the playback of the background music immediately
@@ -109,7 +109,7 @@ public class BreadRain extends ApplicationAdapter {
 				}
 			}
 			if(raindrop.overlaps(bucket)) {
-				dropSound.play();
+				bucketSound.play();
 				dropNumber++;
 				iter.remove();
 			}
@@ -122,7 +122,7 @@ public class BreadRain extends ApplicationAdapter {
 	public void dispose () {
 		dropImage.dispose();
 		bucketImage.dispose();
-		dropSound.dispose();
+		bucketSound.dispose();
 		rainMusic.dispose();
 		batch.dispose();
 	}
