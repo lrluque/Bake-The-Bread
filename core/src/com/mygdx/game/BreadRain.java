@@ -26,7 +26,7 @@ public class BreadRain extends ApplicationAdapter {
 	private Texture backgroundTexture;
 	private Sprite backgroundSprite;
 	private Sound bucketSound;
-	private Music rainMusic;
+	private Music backgroundMusic;
 	private OrthographicCamera camera;
 	private SpriteBatch batch;
 	private Rectangle bucket;
@@ -50,11 +50,11 @@ public class BreadRain extends ApplicationAdapter {
 
 		// load the drop sound effect and the rain background "music"
 		bucketSound = Gdx.audio.newSound(Gdx.files.internal("bucketSound.mp3"));
-		rainMusic = Gdx.audio.newMusic(Gdx.files.internal("rainMusic.mp3"));
+		backgroundMusic = Gdx.audio.newMusic(Gdx.files.internal("backgroundMusic.mp3"));
 
 		// start the playback of the background music immediately
-		rainMusic.setLooping(true);
-		rainMusic.play();
+		backgroundMusic.setLooping(true);
+		backgroundMusic.play();
 
 		camera = new OrthographicCamera();
 		camera.setToOrtho(false, 800, 480);
@@ -155,7 +155,7 @@ public class BreadRain extends ApplicationAdapter {
 		dropImage.dispose();
 		bucketImage.dispose();
 		bucketSound.dispose();
-		rainMusic.dispose();
+		backgroundMusic.dispose();
 		batch.dispose();
 	}
 }
