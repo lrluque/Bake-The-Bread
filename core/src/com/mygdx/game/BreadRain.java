@@ -15,7 +15,6 @@ import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.ScreenUtils;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.utils.TimeUtils;
-
 import java.util.Iterator;
 
 public class BreadRain extends ApplicationAdapter {
@@ -37,8 +36,10 @@ public class BreadRain extends ApplicationAdapter {
 	private int dropNumber;
 	private BitmapFont font;
 	private int liveCounter = 3;
-
-
+	private double acceleration = 0.45;
+	private double velocity = 6;
+	private double xAcceleration = 0;
+	private double friction = 0.025;
 
 	@Override
 	public void create () {
@@ -84,7 +85,6 @@ public class BreadRain extends ApplicationAdapter {
 			raindrop.height = 64;
 			raindrops.add(raindrop);
 			lastDropTime = TimeUtils.nanoTime();
-			System.out.println(bucket.x - raindrop.x);
 		}while(Math.abs(bucket.x - raindrop.x) > 600);
 
 	}
@@ -142,15 +142,18 @@ public class BreadRain extends ApplicationAdapter {
 
 		batch.end();
 
-		if(Gdx.input.isKeyPressed(Input.Keys.LEFT)) bucket.x -= 6;
-		if(Gdx.input.isKeyPressed(Input.Keys.RIGHT)) bucket.x += 6;
-
+		if(Gdx.input.isKeyPressed(Input.Keys.LEFT) && !Gdx.input.isKeyPressed(Input.Keys.RIGHT)) xAcceleration = -acceleration;
+		if(Gdx.input.isKeyPressed(Input.Keys.RIGHT) && !Gdx.input.isKeyPressed(Input.Keys.LEFT)) xAcceleration = acceleration;
+		if(Gdx.input.isKeyPressed(Input.Keys.RIGHT) && Gdx.input.isKeyPressed(Input.Keys.LEFT)) velocity = 0;
+		if(!Gdx.input.isKeyPressed(Input.Keys.RIGHT) && !Gdx.input.isKeyPressed(Input.Keys.LEFT)) xAcceleration = -0.02;
+		velocity += xAcceleration;
+		velocity *= 1 - friction;
+		bucket.x += velocity;
 
 		if(bucket.x < 0) bucket.x = 0;
 		if(bucket.x > 800 - 64) bucket.x = 800 - 64;
 
-		if(TimeUtils.nanoTime() - lastDropTime > 1000000000){
-
+		if(TimeUtils.nanoTime() - lastDropTime > 1200000000){
 			spawnBread();
 		}
 		if(TimeUtils.nanoTime() - lastDropTimeLive > 1000000000) fallingLives();
