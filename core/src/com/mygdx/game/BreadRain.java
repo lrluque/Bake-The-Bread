@@ -37,11 +37,8 @@ public class BreadRain extends ApplicationAdapter {
 	private int dropNumber;
 	private BitmapFont font;
 	private int liveCounter = 3;
-	private double aceleleration = 0;
-	private boolean moving  = false;
-	private boolean goingRight = false;
-	private boolean goingLeft = false;
-	private double velocity = 5.5 + aceleleration;
+
+
 
 	@Override
 	public void create () {
@@ -113,18 +110,6 @@ public class BreadRain extends ApplicationAdapter {
 
 	@Override
 	public void render () {
-		System.out.println(moving);
-		System.out.println(aceleleration);
-		System.out.println(velocity);
-		if (moving && goingLeft && !goingRight || moving && goingRight && !goingLeft){
-			if (aceleleration < 4) {
-				aceleleration += 0.07;
-			}
-		}else{
-			aceleleration = 0;
-		}
-
-		velocity = 5.5 + aceleleration;
 
 		ScreenUtils.clear(0, 0, 0.2f, 1);
 		batch.setProjectionMatrix(camera.combined);
@@ -157,21 +142,9 @@ public class BreadRain extends ApplicationAdapter {
 
 		batch.end();
 
-		if(Gdx.input.isKeyPressed(Input.Keys.LEFT) && Gdx.input.isKeyPressed(Input.Keys.RIGHT)){
-			velocity = 0;
-		}else if(Gdx.input.isKeyPressed(Input.Keys.LEFT)) {
-			bucket.x -= velocity;
-			moving = true;
-			goingLeft = true;
-			goingRight = false;
-		}else if(Gdx.input.isKeyPressed(Input.Keys.RIGHT)){
-			bucket.x += velocity;
-			moving = true;
-			goingRight = true;
-			goingLeft = false;
-		}else{
-			moving = false;
-		}
+		if(Gdx.input.isKeyPressed(Input.Keys.LEFT)) bucket.x -= 6;
+		if(Gdx.input.isKeyPressed(Input.Keys.RIGHT)) bucket.x += 6;
+
 
 		if(bucket.x < 0) bucket.x = 0;
 		if(bucket.x > 800 - 64) bucket.x = 800 - 64;
