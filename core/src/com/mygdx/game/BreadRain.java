@@ -19,7 +19,7 @@ import com.badlogic.gdx.utils.TimeUtils;
 import java.util.Iterator;
 
 public class BreadRain extends ApplicationAdapter {
-	private Texture dropImage;
+	private Texture breadImage;
 	private Texture bucketImage;
 	private Texture liveImage;
 	private Texture noLiveImage;
@@ -31,28 +31,33 @@ public class BreadRain extends ApplicationAdapter {
 	private SpriteBatch batch;
 	private Rectangle bucket;
 	private Array<Rectangle> raindrops;
+	private Array<Rectangle> lives;
 	private long lastDropTime;
+	private long lastDropTimeLive;
 	private int dropNumber;
 	private BitmapFont font;
 	private int liveCounter = 3;
+	private double aceleleration = 0;
+	private boolean moving  = false;
+	private boolean goingRight = false;
+	private boolean goingLeft = false;
+	private double velocity = 5.5 + aceleleration;
 
 	@Override
 	public void create () {
-
 		font = new BitmapFont();
-		// load the images for the droplet and the bucket, 64x64 pixels each
-		dropImage = new Texture(Gdx.files.internal("bread.png"));
+		breadImage = new Texture(Gdx.files.internal("bread.png"));
 		bucketImage = new Texture(Gdx.files.internal("bucket.png"));
 		liveImage = new Texture(Gdx.files.internal("live.png"));
 		noLiveImage = new Texture(Gdx.files.internal("nolive.png"));
 		backgroundTexture = new Texture(Gdx.files.internal("background.png"));
 		backgroundSprite = new Sprite(backgroundTexture);
 
-		// load the drop sound effect and the rain background "music"
+
 		bucketSound = Gdx.audio.newSound(Gdx.files.internal("bucketSound.mp3"));
 		backgroundMusic = Gdx.audio.newMusic(Gdx.files.internal("backgroundMusic.mp3"));
 
-		// start the playback of the background music immediately
+
 		backgroundMusic.setLooping(true);
 		backgroundMusic.play();
 
@@ -68,7 +73,8 @@ public class BreadRain extends ApplicationAdapter {
 
 		raindrops = new Array<Rectangle>();
 		spawnBread();
-
+		lives = new Array<Rectangle>();
+		fallingLives();
 
 	}
 
@@ -86,22 +92,51 @@ public class BreadRain extends ApplicationAdapter {
 
 	}
 
-	public void renderBackground() {
+	private void renderBackground() {
 		backgroundSprite.draw(batch);
 	}
 
 
+	private void fallingLives(){
+		int probability = (int) (10000 * Math.random());
+		Rectangle live = new Rectangle();
+		if (probability <= 5){
+			live.x = MathUtils.random(0, 800 - 64);
+			live.y = 480;
+			live.width = 64;
+			live.height = 64;
+			lives.add(live);
+			lastDropTimeLive = TimeUtils.nanoTime();
+		}
+	}
+
 
 	@Override
 	public void render () {
+		System.out.println(moving);
+		System.out.println(aceleleration);
+		System.out.println(velocity);
+		if (moving && goingLeft && !goingRight || moving && goingRight && !goingLeft){
+			if (aceleleration < 4) {
+				aceleleration += 0.07;
+			}
+		}else{
+			aceleleration = 0;
+		}
+
+		velocity = 5.5 + aceleleration;
+
 		ScreenUtils.clear(0, 0, 0.2f, 1);
 		batch.setProjectionMatrix(camera.combined);
 		batch.begin();
 		renderBackground();
 		for(Rectangle raindrop: raindrops) {
-			batch.draw(dropImage, raindrop.x, raindrop.y);
+			batch.draw(breadImage, raindrop.x, raindrop.y);
 		}
-		batch.draw(dropImage, 610, 420);
+		for(Rectangle live: lives){
+			batch.draw(liveImage, live.x, live.y);
+		}
+		batch.draw(breadImage, 610, 420);
 		font.draw(batch, Integer.toString(dropNumber), 700, 440);
 		batch.draw(bucketImage, bucket.x, bucket.y);
 		if (liveCounter == 3){
@@ -122,13 +157,30 @@ public class BreadRain extends ApplicationAdapter {
 
 		batch.end();
 
-		if(Gdx.input.isKeyPressed(Input.Keys.LEFT)) bucket.x -= 5.5;
-		if(Gdx.input.isKeyPressed(Input.Keys.RIGHT)) bucket.x += 5.5;
+		if(Gdx.input.isKeyPressed(Input.Keys.LEFT) && Gdx.input.isKeyPressed(Input.Keys.RIGHT)){
+			velocity = 0;
+		}else if(Gdx.input.isKeyPressed(Input.Keys.LEFT)) {
+			bucket.x -= velocity;
+			moving = true;
+			goingLeft = true;
+			goingRight = false;
+		}else if(Gdx.input.isKeyPressed(Input.Keys.RIGHT)){
+			bucket.x += velocity;
+			moving = true;
+			goingRight = true;
+			goingLeft = false;
+		}else{
+			moving = false;
+		}
 
 		if(bucket.x < 0) bucket.x = 0;
 		if(bucket.x > 800 - 64) bucket.x = 800 - 64;
 
-		if(TimeUtils.nanoTime() - lastDropTime > 1000000000) spawnBread();
+		if(TimeUtils.nanoTime() - lastDropTime > 1000000000){
+
+			spawnBread();
+		}
+		if(TimeUtils.nanoTime() - lastDropTimeLive > 1000000000) fallingLives();
 
 		for (Iterator<Rectangle> iter = raindrops.iterator(); iter.hasNext(); ) {
 			Rectangle raindrop = iter.next();
@@ -147,12 +199,30 @@ public class BreadRain extends ApplicationAdapter {
 			}
 		}
 
+		for (Iterator<Rectangle> iter = lives.iterator(); iter.hasNext(); ) {
+			Rectangle live = iter.next();
+			live.y -= 3;
+			if(live.y + 64 < 0){
+				iter.remove();
+			}
+			if(live.overlaps(bucket)) {
+				if (liveCounter < 3) {
+					bucketSound.play();
+					liveCounter++;
+					iter.remove();
+				}else{
+					bucketSound.play();
+					iter.remove();
+				}
+			}
+		}
+
 
 	}
 
 	@Override
 	public void dispose () {
-		dropImage.dispose();
+		breadImage.dispose();
 		bucketImage.dispose();
 		bucketSound.dispose();
 		backgroundMusic.dispose();
