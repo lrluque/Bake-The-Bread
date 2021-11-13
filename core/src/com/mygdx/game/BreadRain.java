@@ -18,41 +18,20 @@ import com.badlogic.gdx.utils.TimeUtils;
 import java.util.Iterator;
 
 public class BreadRain extends ApplicationAdapter {
-	private Texture breadImage;
-	private Texture bucketImage;
-	private Texture bucketImageSemiFull;
-	private Texture bucketImageSemiFull2;
-	private Texture bucketImageFull;
-	private Texture liveImage;
-	private Texture noLiveImage;
-	private Texture backgroundTexture;
+	private Texture breadImage, bucketImage, bucketImageSemiFull, bucketImageSemiFull2, bucketImageFull, liveImage, noLiveImage, backgroundTexture;
 	private Sprite backgroundSprite;
-	private Sound bucketSound;
-	private Music backgroundMusic;
-	private Music fire;
-	private Sound liveSound;
-	private Sound oven;
-	private Sound liveLostSound;
+	private Sound bucketSound, liveSound, oven, liveLostSound;
+	private Music backgroundMusic, fire;
 	private OrthographicCamera camera;
 	private SpriteBatch batch;
 	private Rectangle bucket;
-	private Array<Rectangle> raindrops;
-	private Array<Rectangle> lives;
-	private long lastDropTime;
-	private long lastDropTimeLive;
+	private Array<Rectangle> raindrops, lives;
+	private long lastDropTime, lastDropTimeLive;
 	private BitmapFont font;
-	private int liveCounter = 3;
-	private double acceleration = 0.45;
-	private double velocity = 6;
-	private double xAcceleration = 0;
-	private double friction = 0.025;
+	private int liveCounter = 3, breadCounter = 0, backgroundCounter = 0, randomBackground, bucketCounter = 0, levelCounter = 0;
+	private double acceleration = 0.45, velocity = 6, xAcceleration = 0, friction = 0.025, breadVelocity = 2;
 	private String[] BucketSound = {"bucketSound", "bucketSound2", "bucketSound3"};
-	private double breadVelocity = 2;
-	private int breadCounter = 0;
-	private int backgroundCounter = 0;
-	private int randomBackground;
-	private int bucketCounter = 0;
-	private int levelCounter = 0;
+
 
 	@Override
 	public void create () {
@@ -233,11 +212,10 @@ public class BreadRain extends ApplicationAdapter {
 				if (liveCounter < 3) {
 					liveSound.play();
 					liveCounter++;
-					iter.remove();
 				}else{
 					bucketSound.play();
-					iter.remove();
 				}
+				iter.remove();
 			}
 		}
 
