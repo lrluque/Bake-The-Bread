@@ -26,6 +26,8 @@ public class BreadRain extends ApplicationAdapter {
 	private Sprite backgroundSprite;
 	private Sound bucketSound;
 	private Music backgroundMusic;
+	private Sound liveSound;
+	private Sound liveLostSound;
 	private OrthographicCamera camera;
 	private SpriteBatch batch;
 	private Rectangle bucket;
@@ -40,6 +42,9 @@ public class BreadRain extends ApplicationAdapter {
 	private double velocity = 6;
 	private double xAcceleration = 0;
 	private double friction = 0.025;
+	private String[] BucketSound = {"bucketSound", "bucketSound2", "bucketSound3"};
+	double breadVelocity = 3;
+	private int breadCounter = 0;
 
 	@Override
 	public void create () {
@@ -52,8 +57,9 @@ public class BreadRain extends ApplicationAdapter {
 		backgroundSprite = new Sprite(backgroundTexture);
 
 
-		bucketSound = Gdx.audio.newSound(Gdx.files.internal("bucketSound.mp3"));
 		backgroundMusic = Gdx.audio.newMusic(Gdx.files.internal("backgroundMusic.mp3"));
+		liveSound = Gdx.audio.newSound(Gdx.files.internal("live.mp3"));
+		liveLostSound = Gdx.audio.newSound(Gdx.files.internal("liveLost.mp3"));
 
 
 		backgroundMusic.setLooping(true);
@@ -69,24 +75,21 @@ public class BreadRain extends ApplicationAdapter {
 		bucket.width = 64;
 		bucket.height = 64;
 
-		raindrops = new Array<Rectangle>();
+		raindrops = new Array<>();
 		spawnBread();
-		lives = new Array<Rectangle>();
+		lives = new Array<>();
 		fallingLives();
 
 	}
 
 	private void spawnBread() {
 		Rectangle raindrop = new Rectangle();
-		do {
-			raindrop.x = MathUtils.random(0, 800 - 64);
-			raindrop.y = 480;
-			raindrop.width = 64;
-			raindrop.height = 64;
-			raindrops.add(raindrop);
-			lastDropTime = TimeUtils.nanoTime();
-		}while(Math.abs(bucket.x - raindrop.x) > 600);
-
+		raindrop.x = MathUtils.random(0, 800 - 64);
+		raindrop.y = 480;
+		raindrop.width = 64;
+		raindrop.height = 64;
+		raindrops.add(raindrop);
+		lastDropTime = TimeUtils.nanoTime();
 	}
 
 	private void renderBackground() {
@@ -110,7 +113,11 @@ public class BreadRain extends ApplicationAdapter {
 
 	@Override
 	public void render () {
-
+		if (breadCounter == 20 && velocity < 7){
+			breadCounter = 0;
+			breadVelocity += 0.5;
+		}
+		bucketSound = Gdx.audio.newSound(Gdx.files.internal(BucketSound[MathUtils.random(0,2)] +".mp3"));
 		ScreenUtils.clear(0, 0, 0.2f, 1);
 		batch.setProjectionMatrix(camera.combined);
 		batch.begin();
@@ -144,8 +151,13 @@ public class BreadRain extends ApplicationAdapter {
 
 		if(Gdx.input.isKeyPressed(Input.Keys.LEFT) && !Gdx.input.isKeyPressed(Input.Keys.RIGHT)) xAcceleration = -acceleration;
 		if(Gdx.input.isKeyPressed(Input.Keys.RIGHT) && !Gdx.input.isKeyPressed(Input.Keys.LEFT)) xAcceleration = acceleration;
-		if(Gdx.input.isKeyPressed(Input.Keys.RIGHT) && Gdx.input.isKeyPressed(Input.Keys.LEFT)) velocity = 0;
-		if(!Gdx.input.isKeyPressed(Input.Keys.RIGHT) && !Gdx.input.isKeyPressed(Input.Keys.LEFT)) xAcceleration = -0.02;
+		if(!Gdx.input.isKeyPressed(Input.Keys.RIGHT) && !Gdx.input.isKeyPressed(Input.Keys.LEFT)) {
+			if (velocity > 0) {
+				xAcceleration = -0.02;
+			} else if (velocity < 0) {
+				xAcceleration = +0.02;
+			}
+		}
 		velocity += xAcceleration;
 		velocity *= 1 - friction;
 		bucket.x += velocity;
@@ -160,9 +172,10 @@ public class BreadRain extends ApplicationAdapter {
 
 		for (Iterator<Rectangle> iter = raindrops.iterator(); iter.hasNext(); ) {
 			Rectangle raindrop = iter.next();
-			raindrop.y -= 3;
+			raindrop.y -= breadVelocity;
 			if(raindrop.y + 64 < 0){
 				iter.remove();
+				liveLostSound.play();
 				liveCounter -= 1;
 				if (liveCounter == 0){
 					Gdx.app.exit();
@@ -171,6 +184,7 @@ public class BreadRain extends ApplicationAdapter {
 			if(raindrop.overlaps(bucket)) {
 				bucketSound.play();
 				dropNumber++;
+				breadCounter++;
 				iter.remove();
 			}
 		}
@@ -183,7 +197,7 @@ public class BreadRain extends ApplicationAdapter {
 			}
 			if(live.overlaps(bucket)) {
 				if (liveCounter < 3) {
-					bucketSound.play();
+					liveSound.play();
 					liveCounter++;
 					iter.remove();
 				}else{
