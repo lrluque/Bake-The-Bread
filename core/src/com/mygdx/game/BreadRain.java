@@ -18,26 +18,27 @@ import com.badlogic.gdx.utils.TimeUtils;
 import java.util.Iterator;
 
 public class BreadRain extends ApplicationAdapter {
-	private Texture breadImage, bucketImage, bucketImageSemiFull, bucketImageSemiFull2, bucketImageFull, liveImage, noLiveImage, backgroundTexture;
+	private Texture breadImage, bucketImage, bucketImageSemiFull, bucketImageSemiFull2, bucketImageFull, liveImage, noLiveImage, backgroundTexture, planeImage1, planeImage2, planeImage3;
 	private Sprite backgroundSprite;
 	private Sound bucketSound, liveSound, oven, liveLostSound;
 	private Music backgroundMusic, fire;
 	private OrthographicCamera camera;
 	private SpriteBatch batch;
 	private Rectangle bucket;
-	private Array<Rectangle> raindrops, lives;
+	private Array<Rectangle> raindrops, lives, planes;
 	private long lastDropTime, lastDropTimeLive;
 	private BitmapFont font;
 	private int liveCounter = 3, breadCounter = 0, backgroundCounter = 0, randomBackground, bucketCounter = 0, levelCounter = 0;
 	private double acceleration = 0.45, velocity = 6, xAcceleration = 0, friction = 0.025, breadVelocity = 2;
 	private String[] BucketSound = {"bucketSound", "bucketSound2", "bucketSound3"};
-
+	private Boolean planeActive = false;
 
 	@Override
 	public void create () {
 		font = new BitmapFont();
 		breadImage = new Texture(Gdx.files.internal("bread.png"));
 		bucketImage = new Texture(Gdx.files.internal("bucket.png"));
+		planeImage1 = new Texture(Gdx.files.internal("plane.png"));
 		bucketImageSemiFull = new Texture(Gdx.files.internal("bucketsemifull.png"));
 		bucketImageSemiFull2 = new Texture(Gdx.files.internal("bucketsemifull2.png"));
 		bucketImageFull = new Texture(Gdx.files.internal("bucketfull.png"));
@@ -85,6 +86,7 @@ public class BreadRain extends ApplicationAdapter {
 		lastDropTime = TimeUtils.nanoTime();
 	}
 
+
 	private void renderBackground() {
 		backgroundSprite.draw(batch);
 	}
@@ -106,7 +108,6 @@ public class BreadRain extends ApplicationAdapter {
 
 	@Override
 	public void render () {
-		backgroundCounter++;
 		if (backgroundCounter > 6) {
 			randomBackground = MathUtils.random(1, 4);
 			backgroundCounter = 0;
@@ -121,6 +122,8 @@ public class BreadRain extends ApplicationAdapter {
 		ScreenUtils.clear(0, 0, 0.2f, 1);
 		batch.setProjectionMatrix(camera.combined);
 		batch.begin();
+
+		backgroundCounter++;
 		renderBackground();
 		for(Rectangle raindrop: raindrops) {
 			batch.draw(breadImage, raindrop.x, raindrop.y);
@@ -128,6 +131,7 @@ public class BreadRain extends ApplicationAdapter {
 		for(Rectangle live: lives){
 			batch.draw(liveImage, live.x, live.y);
 		}
+
 		batch.draw(breadImage, 460, 420);
 		font.draw(batch, Integer.toString(breadCounter), 550, 440);
 		if (bucketCounter == 0) {
@@ -156,6 +160,7 @@ public class BreadRain extends ApplicationAdapter {
 			batch.draw(noLiveImage, 180, 420);
 		}
 
+
 		batch.end();
 
 		if(Gdx.input.isKeyPressed(Input.Keys.LEFT) && !Gdx.input.isKeyPressed(Input.Keys.RIGHT)) xAcceleration = -acceleration;
@@ -174,10 +179,9 @@ public class BreadRain extends ApplicationAdapter {
 		if(bucket.x < 0) bucket.x = 0;
 		if(bucket.x > 645) bucket.x = 645;
 
-		if(TimeUtils.nanoTime() - lastDropTime > 1900000000){
-			spawnBread();
-		}
+		if(TimeUtils.nanoTime() - lastDropTime > 1900000000) spawnBread();
 		if(TimeUtils.nanoTime() - lastDropTimeLive > 1000000000) fallingLives();
+
 
 		for (Iterator<Rectangle> iter = raindrops.iterator(); iter.hasNext(); ) {
 			Rectangle raindrop = iter.next();
@@ -197,7 +201,6 @@ public class BreadRain extends ApplicationAdapter {
 					iter.remove();
 				}else{
 					Gdx.app.exit();
-					System.out.println("You lost!");
 				}
 			}
 		}
