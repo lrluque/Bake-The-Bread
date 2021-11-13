@@ -29,7 +29,9 @@ public class BreadRain extends ApplicationAdapter {
 	private Sprite backgroundSprite;
 	private Sound bucketSound;
 	private Music backgroundMusic;
+	private Music fire;
 	private Sound liveSound;
+	private Sound oven;
 	private Sound liveLostSound;
 	private OrthographicCamera camera;
 	private SpriteBatch batch;
@@ -38,7 +40,6 @@ public class BreadRain extends ApplicationAdapter {
 	private Array<Rectangle> lives;
 	private long lastDropTime;
 	private long lastDropTimeLive;
-	private int dropNumber;
 	private BitmapFont font;
 	private int liveCounter = 3;
 	private double acceleration = 0.45;
@@ -51,7 +52,7 @@ public class BreadRain extends ApplicationAdapter {
 	private int backgroundCounter = 0;
 	private int randomBackground;
 	private int bucketCounter = 0;
-
+	private int levelCounter = 0;
 
 	@Override
 	public void create () {
@@ -64,6 +65,8 @@ public class BreadRain extends ApplicationAdapter {
 		liveImage = new Texture(Gdx.files.internal("live.png"));
 		noLiveImage = new Texture(Gdx.files.internal("nolive.png"));
 		backgroundMusic = Gdx.audio.newMusic(Gdx.files.internal("backgroundMusic.mp3"));
+		fire = Gdx.audio.newMusic(Gdx.files.internal("fire.mp3"));
+		oven = Gdx.audio.newSound(Gdx.files.internal("oven.mp3"));
 		liveSound = Gdx.audio.newSound(Gdx.files.internal("live.mp3"));
 		liveLostSound = Gdx.audio.newSound(Gdx.files.internal("liveLost.mp3"));
 		randomBackground = MathUtils.random(1, 4);
@@ -72,6 +75,9 @@ public class BreadRain extends ApplicationAdapter {
 
 		backgroundMusic.setLooping(true);
 		backgroundMusic.play();
+		fire.setLooping(true);
+		fire.setVolume(0.5f);
+		fire.play();
 
 		camera = new OrthographicCamera();
 		camera.setToOrtho(false, 800, 480);
@@ -128,9 +134,9 @@ public class BreadRain extends ApplicationAdapter {
 			backgroundTexture = new Texture(Gdx.files.internal("background" + randomBackground + ".png"));
 			backgroundSprite = new Sprite(backgroundTexture);
 		}
-		if (breadCounter == 20 && velocity < 7){
-			breadCounter = 0;
-			breadVelocity += 0.5;
+		if (levelCounter >= 5 && velocity < 7){
+			levelCounter = 5 - levelCounter;
+			breadVelocity += 0.25;
 		}
 		bucketSound = Gdx.audio.newSound(Gdx.files.internal(BucketSound[MathUtils.random(0,2)] +".mp3"));
 		ScreenUtils.clear(0, 0, 0.2f, 1);
@@ -144,7 +150,7 @@ public class BreadRain extends ApplicationAdapter {
 			batch.draw(liveImage, live.x, live.y);
 		}
 		batch.draw(breadImage, 460, 420);
-		font.draw(batch, Integer.toString(dropNumber), 550, 440);
+		font.draw(batch, Integer.toString(breadCounter), 550, 440);
 		if (bucketCounter == 0) {
 			batch.draw(bucketImage, bucket.x, bucket.y);
 		}else if (bucketCounter > 0 && bucketCounter < 5 ){
@@ -197,7 +203,7 @@ public class BreadRain extends ApplicationAdapter {
 		for (Iterator<Rectangle> iter = raindrops.iterator(); iter.hasNext(); ) {
 			Rectangle raindrop = iter.next();
 			raindrop.y -= breadVelocity;
-			if(raindrop.y + 64 < 0){
+			if(raindrop.y - 20 < 0){
 				iter.remove();
 				liveLostSound.play();
 				liveCounter -= 1;
@@ -208,7 +214,6 @@ public class BreadRain extends ApplicationAdapter {
 			if(raindrop.overlaps(bucket)) {
 				if (bucketCounter < 10) {
 					bucketSound.play();
-					dropNumber++;
 					bucketCounter++;
 					iter.remove();
 				}else{
@@ -221,7 +226,7 @@ public class BreadRain extends ApplicationAdapter {
 		for (Iterator<Rectangle> iter = lives.iterator(); iter.hasNext(); ) {
 			Rectangle live = iter.next();
 			live.y -= breadVelocity;
-			if(live.y + 64 < 0){
+			if(live.y - 20 < 0){
 				iter.remove();
 			}
 			if(live.overlaps(bucket)) {
@@ -236,9 +241,11 @@ public class BreadRain extends ApplicationAdapter {
 			}
 		}
 
-		if (bucket.x == 645){
+		if (bucket.x == 645 && bucketCounter > 0){
 			breadCounter += bucketCounter;
+			levelCounter += bucketCounter;
 			bucketCounter = 0;
+			oven.play();
 		}
 
 
