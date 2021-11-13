@@ -20,6 +20,9 @@ import java.util.Iterator;
 public class BreadRain extends ApplicationAdapter {
 	private Texture breadImage;
 	private Texture bucketImage;
+	private Texture bucketImageSemiFull;
+	private Texture bucketImageSemiFull2;
+	private Texture bucketImageFull;
 	private Texture liveImage;
 	private Texture noLiveImage;
 	private Texture backgroundTexture;
@@ -43,24 +46,29 @@ public class BreadRain extends ApplicationAdapter {
 	private double xAcceleration = 0;
 	private double friction = 0.025;
 	private String[] BucketSound = {"bucketSound", "bucketSound2", "bucketSound3"};
-	double breadVelocity = 3;
+	private double breadVelocity = 2;
 	private int breadCounter = 0;
+	private int backgroundCounter = 0;
+	private int randomBackground;
+	private int bucketCounter = 0;
+
 
 	@Override
 	public void create () {
 		font = new BitmapFont();
 		breadImage = new Texture(Gdx.files.internal("bread.png"));
 		bucketImage = new Texture(Gdx.files.internal("bucket.png"));
+		bucketImageSemiFull = new Texture(Gdx.files.internal("bucketsemifull.png"));
+		bucketImageSemiFull2 = new Texture(Gdx.files.internal("bucketsemifull2.png"));
+		bucketImageFull = new Texture(Gdx.files.internal("bucketfull.png"));
 		liveImage = new Texture(Gdx.files.internal("live.png"));
 		noLiveImage = new Texture(Gdx.files.internal("nolive.png"));
-		backgroundTexture = new Texture(Gdx.files.internal("background.png"));
-		backgroundSprite = new Sprite(backgroundTexture);
-
-
 		backgroundMusic = Gdx.audio.newMusic(Gdx.files.internal("backgroundMusic.mp3"));
 		liveSound = Gdx.audio.newSound(Gdx.files.internal("live.mp3"));
 		liveLostSound = Gdx.audio.newSound(Gdx.files.internal("liveLost.mp3"));
-
+		randomBackground = MathUtils.random(1, 4);
+		backgroundTexture = new Texture(Gdx.files.internal("background" + randomBackground + ".png"));
+		backgroundSprite = new Sprite(backgroundTexture);
 
 		backgroundMusic.setLooping(true);
 		backgroundMusic.play();
@@ -71,7 +79,7 @@ public class BreadRain extends ApplicationAdapter {
 
 		bucket = new Rectangle();
 		bucket.x = 800 / 2 - 64 / 2;
-		bucket.y = 20;
+		bucket.y = 23;
 		bucket.width = 64;
 		bucket.height = 64;
 
@@ -84,7 +92,7 @@ public class BreadRain extends ApplicationAdapter {
 
 	private void spawnBread() {
 		Rectangle raindrop = new Rectangle();
-		raindrop.x = MathUtils.random(0, 800 - 64);
+		raindrop.x = MathUtils.random(0, 500);
 		raindrop.y = 480;
 		raindrop.width = 64;
 		raindrop.height = 64;
@@ -101,7 +109,7 @@ public class BreadRain extends ApplicationAdapter {
 		int probability = (int) (10000 * Math.random());
 		Rectangle live = new Rectangle();
 		if (probability <= 5){
-			live.x = MathUtils.random(0, 800 - 64);
+			live.x = MathUtils.random(0, 500);
 			live.y = 480;
 			live.width = 64;
 			live.height = 64;
@@ -113,6 +121,13 @@ public class BreadRain extends ApplicationAdapter {
 
 	@Override
 	public void render () {
+		backgroundCounter++;
+		if (backgroundCounter > 6) {
+			randomBackground = MathUtils.random(1, 4);
+			backgroundCounter = 0;
+			backgroundTexture = new Texture(Gdx.files.internal("background" + randomBackground + ".png"));
+			backgroundSprite = new Sprite(backgroundTexture);
+		}
 		if (breadCounter == 20 && velocity < 7){
 			breadCounter = 0;
 			breadVelocity += 0.5;
@@ -128,23 +143,32 @@ public class BreadRain extends ApplicationAdapter {
 		for(Rectangle live: lives){
 			batch.draw(liveImage, live.x, live.y);
 		}
-		batch.draw(breadImage, 610, 420);
-		font.draw(batch, Integer.toString(dropNumber), 700, 440);
-		batch.draw(bucketImage, bucket.x, bucket.y);
+		batch.draw(breadImage, 460, 420);
+		font.draw(batch, Integer.toString(dropNumber), 550, 440);
+		if (bucketCounter == 0) {
+			batch.draw(bucketImage, bucket.x, bucket.y);
+		}else if (bucketCounter > 0 && bucketCounter < 5 ){
+			batch.draw(bucketImageSemiFull, bucket.x, bucket.y);
+		}else if (bucketCounter > 4 && bucketCounter < 10){
+			batch.draw(bucketImageSemiFull2, bucket.x, bucket.y);
+		}else{
+			batch.draw(bucketImageFull, bucket.x, bucket.y);
+		}
+
 		if (liveCounter == 3){
-			batch.draw(liveImage, 40, 400);
-			batch.draw(liveImage, 110, 400);
-			batch.draw(liveImage, 180, 400);
+			batch.draw(liveImage, 40, 420);
+			batch.draw(liveImage, 110, 420);
+			batch.draw(liveImage, 180, 420);
 		}
 		if (liveCounter == 2){
-			batch.draw(liveImage, 40, 400);
-			batch.draw(liveImage, 110, 400);
-			batch.draw(noLiveImage, 180, 400);
+			batch.draw(liveImage, 40, 420);
+			batch.draw(liveImage, 110, 420);
+			batch.draw(noLiveImage, 180, 420);
 		}
 		if (liveCounter == 1){
-			batch.draw(liveImage, 40, 400);
-			batch.draw(noLiveImage, 110, 400);
-			batch.draw(noLiveImage, 180, 400);
+			batch.draw(liveImage, 40, 420);
+			batch.draw(noLiveImage, 110, 420);
+			batch.draw(noLiveImage, 180, 420);
 		}
 
 		batch.end();
@@ -163,9 +187,9 @@ public class BreadRain extends ApplicationAdapter {
 		bucket.x += velocity;
 
 		if(bucket.x < 0) bucket.x = 0;
-		if(bucket.x > 800 - 64) bucket.x = 800 - 64;
+		if(bucket.x > 645) bucket.x = 645;
 
-		if(TimeUtils.nanoTime() - lastDropTime > 1200000000){
+		if(TimeUtils.nanoTime() - lastDropTime > 1900000000){
 			spawnBread();
 		}
 		if(TimeUtils.nanoTime() - lastDropTimeLive > 1000000000) fallingLives();
@@ -182,16 +206,21 @@ public class BreadRain extends ApplicationAdapter {
 				}
 			}
 			if(raindrop.overlaps(bucket)) {
-				bucketSound.play();
-				dropNumber++;
-				breadCounter++;
-				iter.remove();
+				if (bucketCounter < 10) {
+					bucketSound.play();
+					dropNumber++;
+					bucketCounter++;
+					iter.remove();
+				}else{
+					Gdx.app.exit();
+					System.out.println("You lost!");
+				}
 			}
 		}
 
 		for (Iterator<Rectangle> iter = lives.iterator(); iter.hasNext(); ) {
 			Rectangle live = iter.next();
-			live.y -= 3;
+			live.y -= breadVelocity;
 			if(live.y + 64 < 0){
 				iter.remove();
 			}
@@ -205,6 +234,11 @@ public class BreadRain extends ApplicationAdapter {
 					iter.remove();
 				}
 			}
+		}
+
+		if (bucket.x == 645){
+			breadCounter += bucketCounter;
+			bucketCounter = 0;
 		}
 
 
