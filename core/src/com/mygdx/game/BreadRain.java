@@ -18,7 +18,7 @@ import com.badlogic.gdx.utils.TimeUtils;
 import java.util.Iterator;
 
 public class BreadRain extends ApplicationAdapter {
-	private Texture breadImage, bucketImage, bucketImageSemiFull, bucketImageSemiFull2, bucketImageFull, match, backgroundTexture, twolives, onelive, planeImage1, planeImage2, planeImage3;
+	private Texture menuButton, menuButtonPressed, quitButtonPressed, playButtonPressed, playButton, quitButton, breadImage, bucketImage, bucketImageSemiFull, bucketImageSemiFull2, bucketImageFull, match, backgroundTexture, twolives, onelive, planeImage1, planeImage2, planeImage3;
 	private Sprite backgroundSprite;
 	private Sound bucketSound, liveSound, oven, liveLostSound, matchSound;
 	private Music backgroundMusic, fire;
@@ -31,14 +31,20 @@ public class BreadRain extends ApplicationAdapter {
 	private int liveCounter = 3, breadCounter = 0, backgroundCounter = 0, randomBackground, bucketCounter = 0, levelCounter = 0;
 	private double acceleration = 0.45, velocity = 6, xAcceleration = 0, friction = 0.025, breadVelocity = 2;
 	private String[] BucketSound = {"bucketSound", "bucketSound2", "bucketSound3"};
-	private Boolean planeActive = false, matchBoolean = false, paused = false;
+	private Boolean planeActive = false, matchBoolean = false, paused = false, menu = true;
 
 	@Override
 	public void create () {
 		font = new BitmapFont();
+		playButtonPressed = new Texture(Gdx.files.internal("playbuttonpressed.png"));
+		menuButtonPressed = new Texture(Gdx.files.internal("menubuttonpressed.png"));
+		menuButton = new Texture(Gdx.files.internal("menubutton.png"));
+		quitButtonPressed = new Texture(Gdx.files.internal("quitbuttonpressed.png"));
 		breadImage = new Texture(Gdx.files.internal("bread.png"));
 		bucketImage = new Texture(Gdx.files.internal("bucket.png"));
 		planeImage1 = new Texture(Gdx.files.internal("plane.png"));
+		playButton = new Texture(Gdx.files.internal("playbutton.png"));
+		quitButton = new Texture(Gdx.files.internal("quitbutton.png"));
 		bucketImageSemiFull = new Texture(Gdx.files.internal("bucketsemifull.png"));
 		bucketImageSemiFull2 = new Texture(Gdx.files.internal("bucketsemifull2.png"));
 		bucketImageFull = new Texture(Gdx.files.internal("bucketfull.png"));
@@ -53,12 +59,6 @@ public class BreadRain extends ApplicationAdapter {
 		backgroundTexture = new Texture(Gdx.files.internal("background" + randomBackground + ".png"));
 		backgroundSprite = new Sprite(backgroundTexture);
 
-		backgroundMusic.setLooping(true);
-		backgroundMusic.play();
-		fire.setLooping(true);
-		fire.setVolume(0.5f);
-		fire.play();
-
 		camera = new OrthographicCamera();
 		camera.setToOrtho(false, 800, 480);
 		batch = new SpriteBatch();
@@ -68,12 +68,6 @@ public class BreadRain extends ApplicationAdapter {
 		bucket.y = 23;
 		bucket.width = 64;
 		bucket.height = 64;
-
-		raindrops = new Array<>();
-		spawnBread();
-		lives = new Array<>();
-		fallingLives();
-
 	}
 
 	private void spawnBread() {
@@ -106,8 +100,65 @@ public class BreadRain extends ApplicationAdapter {
 	}
 
 
+
+	public void menuScreen(){
+		backgroundCounter++;
+		fire.setLooping(true);
+		fire.setVolume(0.5f);
+		fire.play();
+		setBackground();
+		batch.setProjectionMatrix(camera.combined);
+		batch.begin();
+		renderBackground();
+		batch.draw(playButton, 300, 240);
+		batch.draw(quitButton, 300, 120);
+		if (Gdx.input.getX() > 300 && Gdx.input.getX() < 500 && Gdx.input.getY() < 240 && Gdx.input.getY() > 130){
+			batch.draw(playButtonPressed, 300, 240);
+			if (Gdx.input.isButtonPressed(Input.Buttons.LEFT)){
+				backgroundMusic.setLooping(true);
+				backgroundMusic.play();
+				raindrops = new Array<>();
+				spawnBread();
+				lives = new Array<>();
+				fallingLives();
+				menu = false;
+			}
+		}
+
+		if (Gdx.input.getX() > 300 && Gdx.input.getX() < 500 && Gdx.input.getY() < 350 && Gdx.input.getY() > 250){
+			batch.draw(quitButtonPressed, 300, 120);
+			if (Gdx.input.isButtonPressed(Input.Buttons.LEFT)) {
+				Gdx.app.exit();
+			}
+		}
+		batch.end();
+	}
+
+
 	@Override
-	public void render () {
+
+	public void render() {
+		System.out.println(raindrops);
+		menuScreen();
+		if (!menu){
+			gameScreen();
+		}
+
+	}
+
+	public void killPlayer(){
+		menu = true;
+		liveCounter = 3;
+		matchBoolean = false;
+		bucketCounter = 0;
+		breadCounter = 0;
+		backgroundMusic.stop();
+		fire.stop();
+		batch = new SpriteBatch();
+		create();
+	}
+
+	public void gameScreen () {
 		if (!paused) {
 			setScene();
 			batch.end();
@@ -142,16 +193,15 @@ public class BreadRain extends ApplicationAdapter {
 					liveLostSound.play();
 					liveCounter -= 1;
 					if (liveCounter == 0) {
-						Gdx.app.exit();
+						killPlayer();
 					}
-				}
-				if (raindrop.overlaps(bucket)) {
+				}if (raindrop.overlaps(bucket)) {
 					if (bucketCounter < 10) {
 						bucketSound.play();
 						bucketCounter++;
 						iter.remove();
 					} else {
-						Gdx.app.exit();
+						killPlayer();
 					}
 				}
 			}
@@ -159,10 +209,10 @@ public class BreadRain extends ApplicationAdapter {
 			for (Iterator<Rectangle> iter = lives.iterator(); iter.hasNext(); ) {
 				Rectangle live = iter.next();
 				live.y -= breadVelocity;
+				live.y = 800;
 				if (live.y - 20 < 0) {
 					iter.remove();
-				}
-				if (live.overlaps(bucket)) {
+				}if (live.overlaps(bucket)) {
 					if (!matchBoolean) {
 						matchBoolean = true;
 					}
@@ -187,7 +237,7 @@ public class BreadRain extends ApplicationAdapter {
 
 			if (Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE)) paused = true;
 
-		}else{
+		}else if (paused && !menu){
 			setScene();
 			font.draw(batch, "GAME PAUSED", 320, 240);
 			batch.end();
@@ -196,24 +246,7 @@ public class BreadRain extends ApplicationAdapter {
 	}
 
 	private void setScene() {
-		if (backgroundCounter > 6) {
-			if (liveCounter == 3) {
-				randomBackground = MathUtils.random(1, 4);
-				backgroundCounter = 0;
-				backgroundTexture = new Texture(Gdx.files.internal("background" + randomBackground + ".png"));
-				backgroundSprite = new Sprite(backgroundTexture);
-			} else if (liveCounter == 2) {
-				randomBackground = MathUtils.random(1, 3);
-				backgroundCounter = 0;
-				backgroundTexture = new Texture(Gdx.files.internal("twolives" + randomBackground + ".png"));
-				backgroundSprite = new Sprite(backgroundTexture);
-			} else {
-				randomBackground = MathUtils.random(1, 2);
-				backgroundCounter = 0;
-				backgroundTexture = new Texture(Gdx.files.internal("onelive" + randomBackground + ".png"));
-				backgroundSprite = new Sprite(backgroundTexture);
-			}
-		}
+		setBackground();
 		if (levelCounter >= 5 && velocity < 7) {
 			levelCounter = 5 - levelCounter;
 			breadVelocity += 0.25;
@@ -248,7 +281,37 @@ public class BreadRain extends ApplicationAdapter {
 		}
 
 		if (bucket.x == 645 && matchBoolean) font.draw(batch, "Press 'E' to ignite", 320, 50);
+
+		if (bucketCounter < 10) {
+			font.setColor(1, 1, 1, 1);
+			font.draw(batch, Integer.toString(bucketCounter), bucket.x + 28, bucket.y + 20);
+		}else{
+			font.setColor(1, 0, 0, 1);
+			font.draw(batch, Integer.toString(bucketCounter), bucket.x + 25, bucket.y + 20);
+		}
 	}
+
+	private void setBackground() {
+		if (backgroundCounter > 6) {
+			if (liveCounter == 3) {
+				randomBackground = MathUtils.random(1, 4);
+				backgroundCounter = 0;
+				backgroundTexture = new Texture(Gdx.files.internal("background" + randomBackground + ".png"));
+				backgroundSprite = new Sprite(backgroundTexture);
+			} else if (liveCounter == 2) {
+				randomBackground = MathUtils.random(1, 3);
+				backgroundCounter = 0;
+				backgroundTexture = new Texture(Gdx.files.internal("twolives" + randomBackground + ".png"));
+				backgroundSprite = new Sprite(backgroundTexture);
+			} else {
+				randomBackground = MathUtils.random(1, 2);
+				backgroundCounter = 0;
+				backgroundTexture = new Texture(Gdx.files.internal("onelive" + randomBackground + ".png"));
+				backgroundSprite = new Sprite(backgroundTexture);
+			}
+		}
+	}
+
 
 	@Override
 	public void dispose () {
