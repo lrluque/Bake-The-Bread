@@ -62,7 +62,6 @@ public class BreadRain extends ApplicationAdapter {
 		camera = new OrthographicCamera();
 		camera.setToOrtho(false, 800, 480);
 		batch = new SpriteBatch();
-
 		bucket = new Rectangle();
 		bucket.x = 800 / 2 - 64 / 2;
 		bucket.y = 23;
@@ -88,6 +87,7 @@ public class BreadRain extends ApplicationAdapter {
 
 	private void fallingLives(){
 		int probability = (int) (10000 * Math.random());
+		System.out.println(probability);
 		Rectangle live = new Rectangle();
 		if (probability <= 5){
 			live.x = MathUtils.random(0, 500);
@@ -139,6 +139,7 @@ public class BreadRain extends ApplicationAdapter {
 
 	public void render() {
 		System.out.println(raindrops);
+		System.out.println(lives);
 		menuScreen();
 		if (!menu){
 			gameScreen();
@@ -149,9 +150,15 @@ public class BreadRain extends ApplicationAdapter {
 	public void killPlayer(){
 		menu = true;
 		liveCounter = 3;
-		matchBoolean = false;
-		bucketCounter = 0;
 		breadCounter = 0;
+		backgroundCounter = 0;
+		bucketCounter = 0;
+		levelCounter = 0;
+		acceleration = 0.45;
+		velocity = 6;
+		xAcceleration = 0;
+		breadVelocity = 2;
+		matchBoolean = false;
 		backgroundMusic.stop();
 		fire.stop();
 		batch = new SpriteBatch();
@@ -209,7 +216,6 @@ public class BreadRain extends ApplicationAdapter {
 			for (Iterator<Rectangle> iter = lives.iterator(); iter.hasNext(); ) {
 				Rectangle live = iter.next();
 				live.y -= breadVelocity;
-				live.y = 800;
 				if (live.y - 20 < 0) {
 					iter.remove();
 				}if (live.overlaps(bucket)) {
@@ -247,7 +253,7 @@ public class BreadRain extends ApplicationAdapter {
 
 	private void setScene() {
 		setBackground();
-		if (levelCounter >= 5 && velocity < 7) {
+		if (levelCounter >= 5 && breadVelocity < 7) {
 			levelCounter = 5 - levelCounter;
 			breadVelocity += 0.25;
 		}
