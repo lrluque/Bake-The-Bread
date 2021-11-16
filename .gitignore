@@ -12,7 +12,7 @@
 .project
 .settings/
 .gradle/
-.idea/
+.idea
 build/
 bin/
 out/
