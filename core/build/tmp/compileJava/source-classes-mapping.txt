@@ -1,2 +1,0 @@
-com/mygdx/game/BakeTheBread.java
- com.mygdx.game.BakeTheBread
