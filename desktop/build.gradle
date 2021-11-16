@@ -24,7 +24,7 @@ task debug(dependsOn: classes, type: JavaExec) {
 
 task dist(type: Jar) {
     manifest {
-        attributes 'Main-Class': project.mainClassName
+        attributes ('Main-Class': project.mainClassName, 'SplashScreen-Image' : 'title.png')
     }
     dependsOn configurations.runtimeClasspath
     from {
