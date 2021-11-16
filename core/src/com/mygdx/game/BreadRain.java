@@ -31,7 +31,7 @@ public class BreadRain extends ApplicationAdapter {
 	private int liveCounter = 3, breadCounter = 0, backgroundCounter = 0, randomBackground, bucketCounter = 0, levelCounter = 0;
 	private double acceleration = 0.45, velocity = 6, xAcceleration = 0, friction = 0.025, breadVelocity = 2;
 	private String[] BucketSound = {"bucketSound", "bucketSound2", "bucketSound3"};
-	private Boolean planeActive = false, matchBoolean = false, paused = false, menu = true;
+	private Boolean matchBoolean = false, paused = false, menu = true;
 
 	@Override
 	public void create () {
@@ -86,6 +86,7 @@ public class BreadRain extends ApplicationAdapter {
 
 
 	private void fallingLives(){
+		//Builds the array based on a probability of 0.05%
 		int probability = (int) (10000 * Math.random());
 		System.out.println(probability);
 		Rectangle live = new Rectangle();
@@ -102,6 +103,7 @@ public class BreadRain extends ApplicationAdapter {
 
 
 	public void menuScreen(){
+		//The menu screen creates the arrays with the objects and allows you to start a new game
 		backgroundCounter++;
 		fire.setLooping(true);
 		fire.setVolume(0.5f);
@@ -138,8 +140,7 @@ public class BreadRain extends ApplicationAdapter {
 	@Override
 
 	public void render() {
-		System.out.println(raindrops);
-		System.out.println(lives);
+		//Initialize different game screens
 		menuScreen();
 		if (!menu){
 			gameScreen();
@@ -148,6 +149,7 @@ public class BreadRain extends ApplicationAdapter {
 	}
 
 	public void killPlayer(){
+		//Reset all variables and create every object
 		menu = true;
 		liveCounter = 3;
 		breadCounter = 0;
@@ -166,6 +168,7 @@ public class BreadRain extends ApplicationAdapter {
 	}
 
 	public void gameScreen () {
+		//In paused it uses the same scene but there is no movement, that's why I divided the code in setScene() and gameScreen()
 		if (!paused) {
 			setScene();
 			batch.end();
@@ -298,6 +301,7 @@ public class BreadRain extends ApplicationAdapter {
 	}
 
 	private void setBackground() {
+		//Background update depending on the flames (lives) left
 		if (backgroundCounter > 6) {
 			if (liveCounter == 3) {
 				randomBackground = MathUtils.random(1, 4);
